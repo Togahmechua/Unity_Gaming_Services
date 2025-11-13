@@ -7,6 +7,10 @@ public class StartCanvas : UICanvas
 {
     [SerializeField] private Button startBtn;
 
+    //Login
+    [SerializeField] private Button anoSignBtn;
+    [SerializeField] private Button unitySignBtn;
+
     private void Start()
     {
         startBtn.onClick.AddListener(() =>
@@ -18,6 +22,16 @@ public class StartCanvas : UICanvas
                 {
                     UIManager.Ins.OpenUI<MainCanvas>();
                 });
+        });
+
+        anoSignBtn.onClick.AddListener(() =>
+        {
+            LoginManager.Ins.StartAnonymousSignIn();
+        });
+
+        unitySignBtn.onClick.AddListener(() =>
+        {
+            LoginManager.Ins.StartUnitySignInAsync();
         });
     }
 }
