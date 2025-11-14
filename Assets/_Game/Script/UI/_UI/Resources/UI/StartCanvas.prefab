@@ -2327,6 +2327,7 @@ MonoBehaviour:
   startBtn: {fileID: 1319940066991319823}
   anoSignBtn: {fileID: 821745850874851531}
   unitySignBtn: {fileID: 2522883986214074636}
+  FbSignBtn: {fileID: 8505451541274197507}
 --- !u!1 &8050019841201254051
 GameObject:
   m_ObjectHideFlags: 0

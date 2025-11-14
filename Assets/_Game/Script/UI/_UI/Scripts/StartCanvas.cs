@@ -10,6 +10,7 @@ public class StartCanvas : UICanvas
     //Login
     [SerializeField] private Button anoSignBtn;
     [SerializeField] private Button unitySignBtn;
+    [SerializeField] private Button FbSignBtn;
 
     private void Start()
     {
@@ -32,6 +33,11 @@ public class StartCanvas : UICanvas
         unitySignBtn.onClick.AddListener(() =>
         {
             LoginManager.Ins.StartUnitySignInAsync();
+        });
+
+        FbSignBtn.onClick.AddListener(() =>
+        {
+            LoginManager.Ins.StartFacebookSignIn();
         });
     }
 }

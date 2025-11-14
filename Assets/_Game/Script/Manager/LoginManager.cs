@@ -1,6 +1,8 @@
+using Facebook.Unity;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Unity.Services.Authentication;
 using Unity.Services.Authentication.PlayerAccounts;
@@ -11,6 +13,7 @@ public class LoginManager : Singleton<LoginManager>
 {
     private async void Awake()
     {
+        InitializeFacebook();
         if (UnityServices.State == ServicesInitializationState.Uninitialized)
         {
             Debug.Log("Services Initializing");
@@ -33,8 +36,7 @@ public class LoginManager : Singleton<LoginManager>
         await SignInAnonymouslyAsync();
     }
 
-#region Login
-
+    #region Login
     public async void StartUnitySignInAsync()
     {
         if (PlayerAccountService.Instance.IsSignedIn)
@@ -121,7 +123,91 @@ public class LoginManager : Singleton<LoginManager>
     }
     #endregion
 
-#endregion
+    #region FacebookLogin
+    public void StartFacebookSignIn()
+    {
+        var perms = new List<string>() { "public_profile", "email" };
+        FB.LogInWithReadPermissions(perms, async result =>
+        {
+            if (FB.IsLoggedIn)
+            {
+                // AccessToken class will have session details
+                var facebookAccessToken = Facebook.Unity.AccessToken.CurrentAccessToken.TokenString;
+
+                if (!AuthenticationService.Instance.IsSignedIn)
+                {
+                    await SignInWithFacebookAsync(facebookAccessToken);
+                }
+                else
+                {
+                    await LinkWithFacebookAsync(facebookAccessToken);
+                }
+            }
+            else
+            {
+                Debug.Log("User cancelled login");
+            }
+        });
+    }
+
+    private async Task SignInWithFacebookAsync(string accessToken)
+    {
+        try
+        {
+            await AuthenticationService.Instance.SignInWithFacebookAsync(accessToken);
+            Debug.Log("Signed in with Facebook!");
+        }
+        catch (RequestFailedException ex)
+        {
+            Debug.LogException(ex);
+        }
+    }
+
+    private void InitializeFacebook()
+    {
+        if (!FB.IsInitialized)
+        {
+            // Initialize the Facebook SDK
+            FB.Init(InitCallback, OnHideUnity);
+        }
+        else
+        {
+            // Already initialized, signal an app activation App Event
+            FB.ActivateApp();
+        }
+    }
+
+    private void InitCallback()
+    {
+        if (FB.IsInitialized)
+        {
+            // Signal an app activation App Event
+            FB.ActivateApp();
+            // Continue with Facebook SDK
+            // ...
+        }
+        else
+        {
+            Debug.Log("Failed to Initialize the Facebook SDK");
+        }
+    }
+
+    private void OnHideUnity(bool isGameShown)
+    {
+        if (!isGameShown)
+        {
+            // Pause the game - we will need to hide
+            Time.timeScale = 0;
+        }
+        else
+        {
+            // Resume the game - we're getting focus again
+            Time.timeScale = 1;
+        }
+    }
+    #endregion
+
+    #endregion
 
     #region Link
     private async Task LinkWithUnityAsync(string accessToken)
@@ -146,6 +232,23 @@ public class LoginManager : Singleton<LoginManager>
         {
             // Compare error code to CommonErrorCodes
             // Notify the player with the proper error message
+            Debug.LogException(ex);
+        }
+    }
+
+    private async Task LinkWithFacebookAsync(string accessToken)
+    {
+        try
+        {
+            await AuthenticationService.Instance.LinkWithFacebookAsync(accessToken);
+            Debug.Log("Linked with Facebook!");
+        }
+        catch (AuthenticationException ex) when (ex.ErrorCode == AuthenticationErrorCodes.AccountAlreadyLinked)
+        {
+            Debug.LogException(ex);
+        }
+        catch (Exception ex)
+        {
             Debug.LogException(ex);
         }
     }
